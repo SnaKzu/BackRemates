@@ -45,8 +45,50 @@ http.createServer((req, res) => {
         dbHistorica = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
     }
 
+    // Transformar datos a la estructura esperada por el frontend
+    const propiedadesTransformadas = dbHistorica.map(prop => {
+        // Extraer ciudad de la ubicación
+        const partes = prop.ubicacion ? prop.ubicacion.split(',') : [];
+        const ciudad = partes.length > 0 ? partes[partes.length - 1].trim() : 'No especificada';
+        
+        // Extraer banco del descripción o contacto (defaultear a "No especificado")
+        const banco = prop.banco || 'No especificado';
+        
+        // Parsear fecha - manejar formato "DD/M/YYYY"
+        let fechaRemate = new Date().toISOString().split('T')[0];
+        if (prop.fecha) {
+            try {
+                const [dia, mes, year] = prop.fecha.split('/');
+                const fechaObj = new Date(year, parseInt(mes) - 1, dia);
+                if (!isNaN(fechaObj)) {
+                    fechaRemate = fechaObj.toISOString().split('T')[0];
+                }
+            } catch (e) {
+                // Si falla, usar la fecha actual
+            }
+        }
+        
+        return {
+            id: prop.url ? prop.url.split('-').pop() : Math.random().toString(36).substr(2, 9),
+            titulo: prop.titulo || 'Sin título',
+            ciudad: ciudad,
+            direccion: prop.ubicacion || 'No especificada',
+            precio: prop.precio_clp || 0,
+            superficie: prop.m2 || 0,
+            valor_m2: prop.valor_m2 || 0,
+            banco: banco,
+            contacto: prop.contacto || 'No disponible',
+            url: prop.url || '#',
+            foto_local: prop.foto_local || 'Sin imagen',
+            descripcion: prop.descripcion || 'Sin descripción',
+            rol: prop.Rol || 'No encontrado',
+            corretaje: prop.corretaje || 'No especificado',
+            fecha_remate: fechaRemate
+        };
+    });
+
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(dbHistorica, null, 2));
+    res.end(JSON.stringify(propiedadesTransformadas, null, 2));
     return;
 }
 
@@ -58,8 +100,50 @@ if (req.url === '/ultimas') {
 
     const ultimas = dbHistorica.slice(-20).reverse();
 
+    // Transformar datos a la estructura esperada por el frontend
+    const ultimasTransformadas = ultimas.map(prop => {
+        // Extraer ciudad de la ubicación
+        const partes = prop.ubicacion ? prop.ubicacion.split(',') : [];
+        const ciudad = partes.length > 0 ? partes[partes.length - 1].trim() : 'No especificada';
+        
+        // Extraer banco (defaultear a "No especificado")
+        const banco = prop.banco || 'No especificado';
+        
+        // Parsear fecha - manejar formato "DD/M/YYYY"
+        let fechaRemate = new Date().toISOString().split('T')[0];
+        if (prop.fecha) {
+            try {
+                const [dia, mes, year] = prop.fecha.split('/');
+                const fechaObj = new Date(year, parseInt(mes) - 1, dia);
+                if (!isNaN(fechaObj)) {
+                    fechaRemate = fechaObj.toISOString().split('T')[0];
+                }
+            } catch (e) {
+                // Si falla, usar la fecha actual
+            }
+        }
+        
+        return {
+            id: prop.url ? prop.url.split('-').pop() : Math.random().toString(36).substr(2, 9),
+            titulo: prop.titulo || 'Sin título',
+            ciudad: ciudad,
+            direccion: prop.ubicacion || 'No especificada',
+            precio: prop.precio_clp || 0,
+            superficie: prop.m2 || 0,
+            valor_m2: prop.valor_m2 || 0,
+            banco: banco,
+            contacto: prop.contacto || 'No disponible',
+            url: prop.url || '#',
+            foto_local: prop.foto_local || 'Sin imagen',
+            descripcion: prop.descripcion || 'Sin descripción',
+            rol: prop.Rol || 'No encontrado',
+            corretaje: prop.corretaje || 'No especificado',
+            fecha_remate: fechaRemate
+        };
+    });
+
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify(ultimas, null, 2));
+    res.end(JSON.stringify(ultimasTransformadas, null, 2));
     return;
 }
     
