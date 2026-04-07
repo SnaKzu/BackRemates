@@ -46,13 +46,50 @@ http.createServer((req, res) => {
     }
 
     // Transformar datos a la estructura esperada por el frontend
-    const propiedadesTransformadas = dbHistorica.map(prop => {
+    const getBancoFromContacto = (contacto, descripcion, titulo) => {
+        if (!contacto) return 'Banco No Especificado';
+        
+        const contactoLC = contacto.toLowerCase();
+        const descLC = (descripcion || '').toLowerCase();
+        const tituloLC = (titulo || '').toLowerCase();
+        
+        // Mapeo de patrones comunes de bancos chilenos
+        const bancosMap = {
+            'Banco de Chile': ['banco de chile', '22 3640140', '222364014'],
+            'BancoEstado': ['bancoestado', 'fomped', '223'],
+            'Scotiabank': ['scotiabank', '620'],
+            'Santander': ['santander', '623', '652'],
+            'Itaú': ['itau', '627'],
+            'Corpbanca': ['corpbanca', '621'],
+            'Banco Falabella': ['falabella', '650'],
+            'Banco Ripley': ['ripley', '653'],
+            'Acciones o Similar': ['acciones', 'similar'],
+            'Juzgado o Corte': ['juzgado', 'corte', 'tribunal'],
+            'Concesionaria': ['concesionaria', 'caminos']
+        };
+        
+        // Buscar coincidencias
+        for (const [banco, patterns] of Object.entries(bancosMap)) {
+            for (const pattern of patterns) {
+                if (contactoLC.includes(pattern) || descLC.includes(pattern) || tituloLC.includes(pattern)) {
+                    return banco;
+                }
+            }
+        }
+        
+        return 'Banco No Especificado';
+    };
+
+    const propiedadesTransformadas = dbHistorica.map((prop, index) => {
         // Extraer ciudad de la ubicación
         const partes = prop.ubicacion ? prop.ubicacion.split(',') : [];
         const ciudad = partes.length > 0 ? partes[partes.length - 1].trim() : 'No especificada';
         
-        // Extraer banco del descripción o contacto (defaultear a "No especificado")
-        const banco = prop.banco || 'No especificado';
+        // Extraer banco usando lógica mejorada
+        let banco = prop.banco;
+        if (!banco || banco === 'No especificado') {
+            banco = getBancoFromContacto(prop.contacto, prop.descripcion, prop.titulo);
+        }
         
         // Parsear fecha - manejar formato "DD/M/YYYY"
         let fechaRemate = new Date().toISOString().split('T')[0];
@@ -100,14 +137,52 @@ if (req.url === '/ultimas') {
 
     const ultimas = dbHistorica.slice(-20).reverse();
 
+    // Función para extraer banco
+    const getBancoFromContacto = (contacto, descripcion, titulo) => {
+        if (!contacto) return 'Banco No Especificado';
+        
+        const contactoLC = contacto.toLowerCase();
+        const descLC = (descripcion || '').toLowerCase();
+        const tituloLC = (titulo || '').toLowerCase();
+        
+        // Mapeo de patrones comunes de bancos chilenos
+        const bancosMap = {
+            'Banco de Chile': ['banco de chile', '22 3640140', '222364014'],
+            'BancoEstado': ['bancoestado', 'fomped', '223'],
+            'Scotiabank': ['scotiabank', '620'],
+            'Santander': ['santander', '623', '652'],
+            'Itaú': ['itau', '627'],
+            'Corpbanca': ['corpbanca', '621'],
+            'Banco Falabella': ['falabella', '650'],
+            'Banco Ripley': ['ripley', '653'],
+            'Acciones o Similar': ['acciones', 'similar'],
+            'Juzgado o Corte': ['juzgado', 'corte', 'tribunal'],
+            'Concesionaria': ['concesionaria', 'caminos']
+        };
+        
+        // Buscar coincidencias
+        for (const [banco, patterns] of Object.entries(bancosMap)) {
+            for (const pattern of patterns) {
+                if (contactoLC.includes(pattern) || descLC.includes(pattern) || tituloLC.includes(pattern)) {
+                    return banco;
+                }
+            }
+        }
+        
+        return 'Banco No Especificado';
+    };
+
     // Transformar datos a la estructura esperada por el frontend
     const ultimasTransformadas = ultimas.map(prop => {
         // Extraer ciudad de la ubicación
         const partes = prop.ubicacion ? prop.ubicacion.split(',') : [];
         const ciudad = partes.length > 0 ? partes[partes.length - 1].trim() : 'No especificada';
         
-        // Extraer banco (defaultear a "No especificado")
-        const banco = prop.banco || 'No especificado';
+        // Extraer banco usando lógica mejorada
+        let banco = prop.banco;
+        if (!banco || banco === 'No especificado') {
+            banco = getBancoFromContacto(prop.contacto, prop.descripcion, prop.titulo);
+        }
         
         // Parsear fecha - manejar formato "DD/M/YYYY"
         let fechaRemate = new Date().toISOString().split('T')[0];
